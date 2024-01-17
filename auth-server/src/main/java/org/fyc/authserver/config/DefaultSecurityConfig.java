@@ -1,6 +1,6 @@
 package org.fyc.authserver.config;
 
-import lombok.RequiredArgsConstructor;
+import jakarta.annotation.Resource;
 import org.fyc.authserver.service.CustomAuthenticationProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -17,13 +17,13 @@ import org.springframework.security.web.SecurityFilterChain;
  */
 @Configuration
 @EnableWebSecurity
-@RequiredArgsConstructor
 public class DefaultSecurityConfig {
 
     /**
      * 自定义认证提供商
      */
-    private final CustomAuthenticationProvider customAuthenticationProvider;
+    @Resource
+    private CustomAuthenticationProvider customAuthenticationProvider;
 
     /**
      * 配置过滤器链

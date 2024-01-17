@@ -1,6 +1,6 @@
 package org.fyc.authserver.service;
 
-import lombok.RequiredArgsConstructor;
+import jakarta.annotation.Resource;
 import org.fyc.authserver.entity.User;
 import org.fyc.authserver.repository.UserRepository;
 import org.springframework.context.annotation.Bean;
@@ -23,13 +23,13 @@ import java.util.List;
  */
 @Service
 @Transactional
-@RequiredArgsConstructor
 public class CustomUserDetailsService implements UserDetailsService {
 
     /**
      * 用户数据访问层
      */
-    private final UserRepository userRepository;
+    @Resource
+    private UserRepository userRepository;
 
     /**
      * 密码编码器

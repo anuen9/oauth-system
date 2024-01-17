@@ -1,6 +1,6 @@
 package org.fyc.authserver.service;
 
-import lombok.RequiredArgsConstructor;
+import jakarta.annotation.Resource;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -14,18 +14,19 @@ import org.springframework.stereotype.Service;
  * 自定义认证提供商
  */
 @Service
-@RequiredArgsConstructor
 public class CustomAuthenticationProvider implements AuthenticationProvider {
 
     /**
      * 自定义用户信息服务
      */
-    private final CustomUserDetailsService customUserDetailsService;
+    @Resource
+    private CustomUserDetailsService customUserDetailsService;
 
     /**
      * 自定义密码编码器
      */
-    private final PasswordEncoder passwordEncoder;
+    @Resource
+    private PasswordEncoder passwordEncoder;
 
     /**
      * 认证

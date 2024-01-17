@@ -4,8 +4,10 @@ spring:
     driver-class-name: com.mysql.cj.jdbc.Driver
     username: root
     password: Fan20011001
-  sql:
-    init:
-      mode: always
 mybatis-plus:
   mapper-locations: classpath:repository/*.xml
+server:
+  port: 9000
+  servlet:
+    session:
+      timeout: 0

@@ -4,23 +4,22 @@ import com.nimbusds.jose.jwk.JWKSet;
 import com.nimbusds.jose.jwk.RSAKey;
 import com.nimbusds.jose.jwk.source.JWKSource;
 import com.nimbusds.jose.proc.SecurityContext;
-import lombok.RequiredArgsConstructor;
-import org.springframework.boot.ApplicationRunner;
+import jakarta.annotation.Resource;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.core.AuthorizationGrantType;
 import org.springframework.security.oauth2.core.ClientAuthenticationMethod;
 import org.springframework.security.oauth2.core.oidc.OidcScopes;
-import org.springframework.security.oauth2.server.authorization.client.JdbcRegisteredClientRepository;
+import org.springframework.security.oauth2.server.authorization.client.InMemoryRegisteredClientRepository;
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClient;
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClientRepository;
 import org.springframework.security.oauth2.server.authorization.config.annotation.web.configuration.OAuth2AuthorizationServerConfiguration;
+import org.springframework.security.oauth2.server.authorization.settings.AuthorizationServerSettings;
 import org.springframework.security.oauth2.server.authorization.settings.ClientSettings;
 import org.springframework.security.web.SecurityFilterChain;
 
@@ -34,14 +33,14 @@ import java.util.UUID;
 /**
  * 认证服务器配置
  */
-@RequiredArgsConstructor
 @Configuration(proxyBeanMethods = false)
 public class AuthorizationServerConfig {
 
     /**
      * 自定义密码编码器
      */
-    private final PasswordEncoder passwordEncoder;
+    @Resource
+    private PasswordEncoder passwordEncoder;
 
     /**
      * 最高等级的过滤器链 配置为默认
@@ -58,45 +57,29 @@ public class AuthorizationServerConfig {
     }
 
     /**
-     * 客户端需要注册到授权服务器并持久化，该处的持久化为jdbc实现
-     * 基于数据库持久化客户端信息，默认的实现为基于内存的Client信息管理，不建议生产使用
+     * 将注册的客户端信息存储在内存中
      *
-     * @param template jdbc bean
-     * @return 基于数据库的客户端仓库
+     * @return registeredClientRepository
      */
     @Bean
-    RegisteredClientRepository registeredClientRepository(JdbcTemplate template) {
-        return new JdbcRegisteredClientRepository(template);
-    }
-
-    /**
-     * 实现ApplicationRunner接口中的run方法实现配置客户端
-     *
-     * @param repository 上述配置中的基于数据库的客户端信息仓库bean
-     * @return 运行器
-     */
-    @Bean
-    ApplicationRunner clientsRunner(RegisteredClientRepository repository) {
-        return args -> {
-            var clientId = "dni";
-            if (repository.findByClientId(clientId) == null) { // 如果数据库中不存在客户端id为"dni"的客户端信息
-                repository.save( // 保存客户端信息，是实现配置客户端的终结步骤
-                        RegisteredClient
-                                .withId(UUID.randomUUID().toString())
-                                .clientId(clientId) // 客户端id
-                                .clientSecret(passwordEncoder.encode(clientId)) // 客户端密钥
-                                .clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_BASIC)
-                                .authorizationGrantTypes(grantTypes -> grantTypes.addAll(Set.of(
-                                        AuthorizationGrantType.CLIENT_CREDENTIALS,
-                                        AuthorizationGrantType.AUTHORIZATION_CODE,
-                                        AuthorizationGrantType.REFRESH_TOKEN)))
-                                .redirectUri("http://127.0.0.1:8082/login/oauth2/code/spring") // 重定向uri
-                                .scopes(scope -> scope.addAll(Set.of("user.read", "user.write", OidcScopes.OPENID)))
-                                .clientSettings(ClientSettings.builder().requireAuthorizationConsent(true).build())
-                                .build()
-                );
-            }
-        };
+    public RegisteredClientRepository registeredClientRepository() {
+        final String clientId = "dni";
+        // 保存客户端信息，是实现配置客户端的终结步骤
+        RegisteredClient registeredClient = RegisteredClient
+                .withId(UUID.randomUUID().toString())
+                .clientId(clientId) // 客户端id
+                .clientSecret(passwordEncoder.encode(clientId)) // 客户端密钥
+                .clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_BASIC)
+                .authorizationGrantTypes(grantTypes -> grantTypes.addAll(Set.of(
+                        AuthorizationGrantType.CLIENT_CREDENTIALS,
+                        AuthorizationGrantType.AUTHORIZATION_CODE,
+                        AuthorizationGrantType.REFRESH_TOKEN)))
+                .redirectUri("http://127.0.0.1:8099/login/oauth2/code/api-client") // 重定向uri
+                .redirectUri("http://127.0.0.1:8099/authorized")
+                .scopes(scope -> scope.addAll(Set.of("user.read", "user.write", OidcScopes.OPENID)))
+                .clientSettings(ClientSettings.builder().requireAuthorizationConsent(true).build())
+                .build();
+        return new InMemoryRegisteredClientRepository(registeredClient);
     }
 
     /**
@@ -143,4 +126,8 @@ public class AuthorizationServerConfig {
         return keyPair;
     }
 
+    @Bean
+    public AuthorizationServerSettings authorizationServerSettings() {
+        return AuthorizationServerSettings.builder().build();
+    }
 }
