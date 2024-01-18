@@ -74,8 +74,8 @@ public class AuthorizationServerConfig {
                         AuthorizationGrantType.CLIENT_CREDENTIALS,
                         AuthorizationGrantType.AUTHORIZATION_CODE,
                         AuthorizationGrantType.REFRESH_TOKEN)))
-                .redirectUri("http://127.0.0.1:8099/login/oauth2/code/api-client") // 重定向uri
-                .redirectUri("http://127.0.0.1:8099/authorized")
+                .redirectUri("http://127.0.0.1:8080/login/oauth2/code/api-client-oidc") // 重定向uri
+                .redirectUri("http://127.0.0.1:8080/authorized")
                 .scopes(scope -> scope.addAll(Set.of("user.read", "user.write", OidcScopes.OPENID)))
                 .clientSettings(ClientSettings.builder().requireAuthorizationConsent(true).build())
                 .build();
@@ -124,10 +124,5 @@ public class AuthorizationServerConfig {
             throw new IllegalStateException(e);
         }
         return keyPair;
-    }
-
-    @Bean
-    public AuthorizationServerSettings authorizationServerSettings() {
-        return AuthorizationServerSettings.builder().build();
     }
 }

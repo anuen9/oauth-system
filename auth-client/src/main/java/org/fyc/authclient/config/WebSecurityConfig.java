@@ -33,7 +33,7 @@ public class WebSecurityConfig {
                     auth.requestMatchers(WHITE_LIST_URLS).permitAll();
                     auth.requestMatchers("/api/**").authenticated();
                 })
-                .oauth2Login(oauth2Login -> oauth2Login.loginPage("/oauth2/authorization/api-client"))
+                .oauth2Login(oauth2Login -> oauth2Login.loginPage("/oauth2/authorization/api-client-oidc"))
                 .oauth2Client(Customizer.withDefaults());
         return http.build();
     }
